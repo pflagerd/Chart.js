@@ -17,8 +17,8 @@ for (let i = 0; i < NUMBER_OF_TRADERS; i++) {
   traders[i] = 1;
 }
 
-barChartData.labels = [0, 1];
-barChartData.datasets[0].data = [0, NUMBER_OF_TRADERS];
+barChartData.labels = [1];
+barChartData.datasets[0].data = [NUMBER_OF_TRADERS];
 
 window.onload = function() {
   let ctx = document.getElementById('canvas').getContext('2d');
@@ -63,6 +63,8 @@ function shuffle(array) {
   return array;
 }
 
+let tradingRounds = 0;
+
 function trade() {
   let tradingPartners = [];
 
@@ -73,52 +75,49 @@ function trade() {
   shuffle(tradingPartners);
 
   for (let i = 0; i < traders.length; i++) {
-    if (i < traders.length - 1 ? Math.random() <= 0.5 : Math.random() <= 0.51) {
+    if (i < traders.length - 1 ? Math.random() <= 0.5 : Math.random() <= 0.525) {
       // trader[i] wins, take $1 from tradingPartner[trader[i]] and give it to trader[i]
-      if (traders[tradingPartners[i]] >= 1) {
-        traders[tradingPartners[i]]--;
-        traders[i]++;
-      }
+      traders[tradingPartners[i]]--;
+      traders[i]++;
     } else {
       // trader[tradingPartner[i]] wins, take $1 from trader[i] and give it to trader[tradingPartner[i]]
-      if (traders[i] >= 1) {
-        traders[i]--;
-        traders[tradingPartners[i]]++;
-      }
+      traders[i]--;
+      traders[tradingPartners[i]]++;
     }
   }
 
   let length = traders.length;
   for (let i = 0, j = 0; i < length; i++) {
-    if (traders[j] === 0) {
+    if (Math.floor(traders[j]) <= 0) {
       traders.splice(j, 1);
     } else {
       j++;
     }
   }
 
+  console.log(++tradingRounds + " " + traders.length);
+
+  if (tradingRounds >= 2000)
+    stopButton();
 }
 
 function redistribute() {
-  console.log(traders.length);
-  let max = Math.max(...traders);
-
   barChartData.datasets[0].data = []
   barChartData.labels = []
-  for (let i = 0; i < max + 1; i++) {
+  for (let i = 1; i <= Math.max(...traders); i++) {
     barChartData.labels.push(i);
     barChartData.datasets[0].data.push(0);
   }
 
   for (let i = 0; i < traders.length; i++) {
-    if (traders[i] !== 0)
-      barChartData.datasets[0].data[traders[i]]++;
+    barChartData.datasets[0].data[traders[i] - 1]++;
   }
+
 }
 
 function startButton() {
   window.document.getElementById('startButton').disabled = true
-  window.document.getElementById('pauseButton').disabled = false;
+  window.document.getElementById('stopButton').disabled = false;
 
   window.interval = setInterval(function() {
     trade();
